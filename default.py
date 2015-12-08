@@ -9,6 +9,8 @@ import xbmcgui
 import xbmcvfs
 import xbmcaddon
 import StorageServer
+import gzip
+import StringIO from StringIO
 from traceback import format_exc
 from urlparse import urlparse, parse_qs
 from BeautifulSoup import BeautifulSoup
@@ -49,6 +51,13 @@ def make_request(url, data=None, headers=None):
         response = urllib2.urlopen(req)
         cookie_jar.save(cookie_file, ignore_discard=True, ignore_expires=False)
         data = response.read()
+        if response.info().get('Content-Encoding') == 'gzip':
+            buf = StringIO(response.read())
+            f = gzip.GzipFile(fileobj=buf)
+            data = f.read()
+        else:
+            data = response.read()
+
         addon_log(str(response.info()))
         redirect_url = response.geturl()
         response.close()
